@@ -122,7 +122,7 @@ int main() {
 	double pop[POPULATION][50] = { 0 };
 
 	//評価
-	double eval[POPULATION] = { 0 };
+	double evals[POPULATION] = { 0 };
 
 	std::random_device rnd;
 
@@ -131,7 +131,7 @@ int main() {
 		int now_weight = 0;
 		int now_eval = 0;
 
-		for (int x = 0; x < 50; x++) {
+		for (int x = 0; x < POPULATION; x++) {
 			//生成
 			if (rnd() % 2 == 0) {
 				//ほんとに入れてええのか？
@@ -155,33 +155,60 @@ int main() {
 
 		}
 		//全体評価
-		eval[y] = now_eval;
+		evals[y] = now_eval;
 
 		//表示
-		cout << "weight" << now_weight << "eval" << eval[y] << endl;
+		cout << "weight" << now_weight << "eval" << evals[y] << endl;
 	}
 
 	//ルーレットフェーズ
+	double* ratios = roulette(evals);
+
+	//親の選択(2体)
+	//randomを使って親を2体選択
+	/*
+	double rnd= random(0,1.0);
+	double selectProb=0;
+	for(int i=0;i<POPULATION;i++){
+	//rndより大きくなったらそいつを親にする : 確率の並び方では変わらないはず
+		if(selectProb >= rnd) parent=i;
+	}
+	*/
+
+	//交叉
+
+	//突然変異
+
+	//Accepting :　新しい子孫を新しい個体群へ
+
+	//ループ上へ戻る
 
 }
 
 double eval(double* pop) {
 	double now_eval = 0;
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < POPULATION; i++) {
 		if (pop[i] == 1) now_eval += prise[i];
 	}
 	return now_eval;
 }
 
-double roulette(double* eval_list) {
+double* roulette(double const evals[]) {
 	double sum = 0;
-	double proportion[] = { 0 };
+	double ratios[50] = { 0 };
 
 	//全体の計算
 	for (int i = 0; i < POPULATION; i++) {
-		sum += eval_list[i];
+		sum += evals[i];
 	}
-	//割合の決定
-	//proportion
-	return sum;
+
+	//価値に対する割合の決定
+	for (int i = 0; i < POPULATION; i++) {
+		ratios[i] = evals[i] / sum;
+	}
+
+	return ratios;
+}
+double selectParent() {
+	
 }

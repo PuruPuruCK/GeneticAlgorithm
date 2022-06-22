@@ -115,14 +115,18 @@ const double CROSS = 0.8;
 const double MUTATION = 0.3;
 const int GENERATION = 30000;
 const int POPULATION = 50;
+const int MAXIMUM_GENOTYPE = 50;
 
 int main() {
 
 
-	double pop[POPULATION][50] = { 0 };
+	double genotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
 	//評価
 	double evals[POPULATION] = { 0 };
+
+	//新しい世代
+	double newgenotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
 	std::random_device rnd;
 
@@ -140,7 +144,7 @@ int main() {
 					continue;
 				}
 				//入れてもOKなので入れる
-				pop[y][x] = 1;
+				genotype[y][x] = 1;
 				//入れたのでweightの更新
 				now_weight += weight[x];
 				//評価更新
@@ -150,7 +154,7 @@ int main() {
 
 
 			//表示
-			cout << pop[y][x] << ",";
+			cout << genotype[y][x] << ",";
 
 
 		}
@@ -166,18 +170,19 @@ int main() {
 
 	//親の選択(2体)
 	//randomを使って親を2体選択
-	/*
-	double rnd= random(0,1.0);
-	double selectProb=0;
-	for(int i=0;i<POPULATION;i++){
-	//rndより大きくなったらそいつを親にする : 確率の並び方では変わらないはず
-		if(selectProb >= rnd) parent=i;
-	}
-	*/
+	int parentA = selectParent(ratios);
+	int parentB = selectParent(ratios);
 
 	//交叉
 
+	//子孫
+	double offspring[MAXIMUM_GENOTYPE] = { 0 };
+	
+	//交叉判定よりも大きいなら交叉
+	if (rnd() / rnd.max > CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+
 	//突然変異
+
 
 	//Accepting :　新しい子孫を新しい個体群へ
 
@@ -193,9 +198,19 @@ double eval(double* pop) {
 	return now_eval;
 }
 
+int highestPop(double* evals) {
+	int highest = 0;
+	
+	for (int i = 1; i < POPULATION; i++) {
+		if (evals[highest] < evals[i]) highest = i;
+	}
+	return highest
+}
+
+
 double* roulette(double const evals[]) {
 	double sum = 0;
-	double ratios[50] = { 0 };
+	double ratios[POPULATION] = { 0 };
 
 	//全体の計算
 	for (int i = 0; i < POPULATION; i++) {
@@ -209,6 +224,55 @@ double* roulette(double const evals[]) {
 
 	return ratios;
 }
-double selectParent() {
-	
+int selectParent(double* const ratios) {
+	std::random_device rnd;
+
+	double rndProb = rnd()/rnd.max;
+	double selectProb = 0;
+
+	int selecter = 0;
+
+	for (selecter = 0; selecter < POPULATION; selecter++) {
+		//rndより大きくなったらそいつを親にする : 確率の並び方では変わらないはず
+		if (selectProb >= rnd) {
+			parent = selecter;
+			break;
+		}
+		else
+		{
+			selectProb += ratios[selecter];
+		}
+	}
+	return selecter;
 }
+
+void writeCrossoveredGenotype(double* offspring,double* const parentA,double* const parentB) {
+	//一転交叉
+	std::random_device rnd;
+
+	int crossover_point = (int) std::floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
+
+	//交叉
+	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+		offspring[i] = (crossover_point > i) ? parentA[i] : parentB[i];
+	}
+}
+
+//突然変異
+void writeMutatedGenotype(double* offspring) {
+	
+	std::random_device rnd;
+
+	//3個ぐらい入れ替える
+	const int MUTATION_NUM = 3;
+
+	for (int i = 0; i < MUTATION_NUM; i++) {
+	
+		int point = (int)floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
+		
+		//反転
+		offspring[point] = 1 - offspring[point];
+	}
+}
+
+//参考になる https://www.slideshare.net/kzokm/genetic-algorithm-41617242

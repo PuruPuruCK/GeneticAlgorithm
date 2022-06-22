@@ -178,13 +178,22 @@ int main() {
 	//子孫
 	double offspring[MAXIMUM_GENOTYPE] = { 0 };
 	
-	//交叉判定よりも大きいなら交叉
-	if (rnd() / rnd.max > CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+	//交叉判定よりも小さいなら交叉
+	if (rnd() / rnd.max < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+	//交叉しない場合はparentA
+	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+		offspring[i] = genotype[parentA][i];
+	}
 
 	//突然変異
+	if (rnd() / rnd.max < MUTATION) writeMutatedGenotype(offspring);
 
 
 	//Accepting :　新しい子孫を新しい個体群へ
+	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+		newgenotype[0][i] = offspring[i];
+	}
+	
 
 	//ループ上へ戻る
 

@@ -117,6 +117,15 @@ const int GENERATION = 30000;
 const int POPULATION = 50;
 const int MAXIMUM_GENOTYPE = 50;
 
+void writeGenotypeEval(double (* genotype)[MAXIMUM_GENOTYPE], double* evals);
+double eval(double* pop);
+int highestPopNum(double* evals);
+double* roulette(double const evals[]);
+int selectParent(double* const ratios);
+void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB);
+void writeMutatedGenotype(double* offspring);
+
+
 int main() {
 
 
@@ -165,38 +174,65 @@ int main() {
 		cout << "weight" << now_weight << "eval" << evals[y] << endl;
 	}
 
-	//ルーレットフェーズ
-	double* ratios = roulette(evals);
+	for (int i = 0; i < 30000; i++){
+		//ルーレットフェーズ
+		double* ratios = roulette(evals);
 
-	//親の選択(2体)
-	//randomを使って親を2体選択
-	int parentA = selectParent(ratios);
-	int parentB = selectParent(ratios);
+			//親の選択(2体)
+			//randomを使って親を2体選択
+			int parentA = selectParent(ratios);
+			int parentB = selectParent(ratios);
 
-	//交叉
+			//交叉
 
-	//子孫
-	double offspring[MAXIMUM_GENOTYPE] = { 0 };
-	
-	//交叉判定よりも小さいなら交叉
-	if (rnd() / rnd.max < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
-	//交叉しない場合はparentA
-	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
-		offspring[i] = genotype[parentA][i];
+			//子孫
+			double offspring[MAXIMUM_GENOTYPE] = { 0 };
+
+		//交叉判定よりも小さいなら交叉
+		if (rnd() / rnd.max < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+		//交叉しない場合はparentA
+		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+			offspring[i] = genotype[parentA][i];
+		}
+
+		//突然変異
+		if (rnd() / rnd.max < MUTATION) writeMutatedGenotype(offspring);
+
+
+		//Accepting :　新しい子孫を新しい個体群へ
+		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+			newgenotype[0][i] = offspring[i];
+		}
+		
+		//評価
+		writeGenotypeEval(genotype, evals);
+
+		//優秀な奴
+		int highestPop = highestPopNum(evals);
+
+		cout << "weight" << evals[highestPop] << endl;
 	}
 
-	//突然変異
-	if (rnd() / rnd.max < MUTATION) writeMutatedGenotype(offspring);
 
+}
 
-	//Accepting :　新しい子孫を新しい個体群へ
-	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
-		newgenotype[0][i] = offspring[i];
+//引数は，MAXIMUM_GENOTYPEこの要素をもった配列へのポインタ
+void writeGenotypeEval(double (* genotype)[MAXIMUM_GENOTYPE], double* evals) {
+	for (int y = 0; y < POPULATION; y++) {
+		int now_weight = 0;
+		int now_eval = 0;
+
+		for (int x = 0; x < POPULATION; x++) {
+			if (genotype[y][x] == 1) {
+				//入ってるのでweightの更新
+				now_weight += weight[x];
+			}
+			//評価更新
+			now_eval += prise[x];
+		}
+		//全体評価
+		evals[y] = now_eval;
 	}
-	
-
-	//ループ上へ戻る
-
 }
 
 double eval(double* pop) {
@@ -207,13 +243,13 @@ double eval(double* pop) {
 	return now_eval;
 }
 
-int highestPop(double* evals) {
+int highestPopNum(double* evals) {
 	int highest = 0;
-	
+
 	for (int i = 1; i < POPULATION; i++) {
 		if (evals[highest] < evals[i]) highest = i;
 	}
-	return highest
+	return highest;
 }
 
 
@@ -236,14 +272,14 @@ double* roulette(double const evals[]) {
 int selectParent(double* const ratios) {
 	std::random_device rnd;
 
-	double rndProb = rnd()/rnd.max;
+	double rndProb = rnd() / rnd.max;
 	double selectProb = 0;
 
 	int selecter = 0;
 
 	for (selecter = 0; selecter < POPULATION; selecter++) {
 		//rndより大きくなったらそいつを親にする : 確率の並び方では変わらないはず
-		if (selectProb >= rnd) {
+		if (selectProb >= rndProb) {
 			parent = selecter;
 			break;
 		}
@@ -255,11 +291,11 @@ int selectParent(double* const ratios) {
 	return selecter;
 }
 
-void writeCrossoveredGenotype(double* offspring,double* const parentA,double* const parentB) {
+void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB) {
 	//一転交叉
 	std::random_device rnd;
 
-	int crossover_point = (int) std::floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
+	int crossover_point = (int)std::floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
 
 	//交叉
 	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
@@ -269,19 +305,20 @@ void writeCrossoveredGenotype(double* offspring,double* const parentA,double* co
 
 //突然変異
 void writeMutatedGenotype(double* offspring) {
-	
+
 	std::random_device rnd;
 
 	//3個ぐらい入れ替える
 	const int MUTATION_NUM = 3;
 
 	for (int i = 0; i < MUTATION_NUM; i++) {
-	
+
 		int point = (int)floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
-		
+
 		//反転
 		offspring[point] = 1 - offspring[point];
 	}
 }
+
 
 //参考になる https://www.slideshare.net/kzokm/genetic-algorithm-41617242

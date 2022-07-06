@@ -125,9 +125,19 @@ int selectParent(double* const ratios);
 void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB);
 void writeMutatedGenotype(double* offspring);
 
+double get_rand_real() {
+	// —”¶¬Ší
+	static std::mt19937_64 mt64(0);
+
+	std::uniform_real_distribution<double> get_rand_uni_real(0.0, 1.0);
+
+	// —”‚ğ¶¬
+	return get_rand_uni_real(mt64);
+}
 
 int main() {
 
+	std::random_device rnd;
 
 	double genotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
@@ -137,7 +147,6 @@ int main() {
 	//V‚µ‚¢¢‘ã
 	double newgenotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
-	std::random_device rnd;
 
 	//‘æˆêŒQ‚Ì¶¬
 	for (int y = 0; y < POPULATION; y++) {
@@ -189,14 +198,14 @@ int main() {
 			double offspring[MAXIMUM_GENOTYPE] = { 0 };
 
 		//Œğ³”»’è‚æ‚è‚à¬‚³‚¢‚È‚çŒğ³
-		if (rnd() / rnd.max < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+		if ( get_rand_real() < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
 		//Œğ³‚µ‚È‚¢ê‡‚ÍparentA
 		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
 			offspring[i] = genotype[parentA][i];
 		}
 
 		//“Ë‘R•ÏˆÙ
-		if (rnd() / rnd.max < MUTATION) writeMutatedGenotype(offspring);
+		if (get_rand_real() < MUTATION) writeMutatedGenotype(offspring);
 
 
 		//Accepting :@V‚µ‚¢q‘·‚ğV‚µ‚¢ŒÂ‘ÌŒQ‚Ö
@@ -210,7 +219,7 @@ int main() {
 		//—DG‚È“z
 		int highestPop = highestPopNum(evals);
 
-		cout << "weight" << evals[highestPop] << endl;
+		cout << "evals" << evals[highestPop] << endl;
 	}
 
 
@@ -272,7 +281,7 @@ double* roulette(double const evals[]) {
 int selectParent(double* const ratios) {
 	std::random_device rnd;
 
-	double rndProb = rnd() / rnd.max;
+	double rndProb = get_rand_real();
 	double selectProb = 0;
 
 	int selecter = 0;
@@ -280,7 +289,7 @@ int selectParent(double* const ratios) {
 	for (selecter = 0; selecter < POPULATION; selecter++) {
 		//rnd‚æ‚è‘å‚«‚­‚È‚Á‚½‚ç‚»‚¢‚Â‚ğe‚É‚·‚é : Šm—¦‚Ì•À‚Ñ•û‚Å‚Í•Ï‚í‚ç‚È‚¢‚Í‚¸
 		if (selectProb >= rndProb) {
-			parent = selecter;
+			//selecter‚ğe‚Æ‚µ‚Ä•Ô‚·
 			break;
 		}
 		else
@@ -295,7 +304,7 @@ void writeCrossoveredGenotype(double* offspring, double* const parentA, double* 
 	//ˆê“]Œğ³
 	std::random_device rnd;
 
-	int crossover_point = (int)std::floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
+	int crossover_point = (int)std::floor(get_rand_real() * MAXIMUM_GENOTYPE);
 
 	//Œğ³
 	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
@@ -313,7 +322,7 @@ void writeMutatedGenotype(double* offspring) {
 
 	for (int i = 0; i < MUTATION_NUM; i++) {
 
-		int point = (int)floor(rnd() / rnd.max * MAXIMUM_GENOTYPE);
+		int point = (int)floor(get_rand_real() * MAXIMUM_GENOTYPE);
 
 		//”½“]
 		offspring[point] = 1 - offspring[point];

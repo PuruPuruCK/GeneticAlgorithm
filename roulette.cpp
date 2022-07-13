@@ -135,6 +135,8 @@ double get_rand_real() {
 	return get_rand_uni_real(mt64);
 }
 
+//重量計算されていないので直してくれ
+
 int main() {
 
 	
@@ -220,18 +222,7 @@ int main() {
 			for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
 				genotype[newPOP][i] = offspring[i];
 			}
-		}
-			//test
-			
-			for (int testx = 0; testx < POPULATION; testx++) {
-				cout << "GENERATEDGEN" << testx<<":";
-				for (int testy = 0; testy < MAXIMUM_GENOTYPE; testy++) {
-					cout << genotype[testx][testy];
-				}
-				cout << endl;
-			}
-		
-			
+		}	
 		
 		//評価
 		writeGenotypeEval(genotype, evals);
@@ -241,13 +232,18 @@ int main() {
 
 		cout << "GEN"<<gen<<"*"<<"evals" << evals[highestPop] << endl;
 	}
+	return 0;
 }
 
 //引数は，MAXIMUM_GENOTYPEこの要素をもった配列へのポインタ
 void writeGenotypeEval(double (*genotype)[MAXIMUM_GENOTYPE], double* evals) {
+	
+	int now_weight = 0;
+	int now_eval = 0;
+
 	for (int y = 0; y < POPULATION; y++) {
-		int now_weight = 0;
-		int now_eval = 0;
+		now_weight = 0;
+		now_eval = 0;
 
 		cout << "NEWGENOTYPE" << y << ":";
 
@@ -256,13 +252,15 @@ void writeGenotypeEval(double (*genotype)[MAXIMUM_GENOTYPE], double* evals) {
 			if (genotype[y][x] == 1) {
 				//入ってるのでweightの更新
 				now_weight += weight[x];
+				//評価更新
+				now_eval += prise[x];
 			}
-			//評価更新
-			now_eval += prise[x];
+			
 		}
-		//全体評価
 		evals[y] = now_eval;
-		cout << " eval" << evals[y] << endl;
+		//全体評価
+		cout << " eval" << evals[y] << "," << "weight" << now_weight << endl;
+		
 	}
 }
 

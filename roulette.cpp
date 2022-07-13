@@ -120,7 +120,7 @@ const int MAXIMUM_GENOTYPE = 50;
 void writeGenotypeEval(double (* genotype)[MAXIMUM_GENOTYPE], double* evals);
 double eval(double* pop);
 int highestPopNum(double* evals);
-double* roulette(double const evals[]);
+void writeRouletteRatios(double const evals[],double*);
 int selectParent(double* const ratios);
 void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB);
 void writeMutatedGenotype(double* offspring);
@@ -137,15 +137,13 @@ double get_rand_real() {
 
 int main() {
 
+	
 	std::random_device rnd;
 
 	double genotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
 	//評価
 	double evals[POPULATION] = { 0 };
-
-	//新しい世代
-	double newgenotype[POPULATION][MAXIMUM_GENOTYPE] = { 0 };
 
 
 	//第一群の生成
@@ -183,10 +181,16 @@ int main() {
 		cout << "weight" << now_weight << "eval" << evals[y] << endl;
 	}
 
-	for (int i = 0; i < 30000; i++){
+	//進化ループ
+	for (int gen = 0; gen < 2; gen++){
 		//ルーレットフェーズ
-		double* ratios = roulette(evals);
+		double ratios[POPULATION] = { 0 };
 
+		writeRouletteRatios(evals,ratios);
+
+		//交配（POPULATION体分）
+		for (int newPOP = 0; newPOP < POPULATION; newPOP++) {
+			
 			//親の選択(2体)
 			//randomを使って親を2体選択
 			int parentA = selectParent(ratios);
@@ -197,21 +201,27 @@ int main() {
 			//子孫
 			double offspring[MAXIMUM_GENOTYPE] = { 0 };
 
-		//交叉判定よりも小さいなら交叉
-		if ( get_rand_real() < CROSS) writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
-		//交叉しない場合はparentA
-		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
-			offspring[i] = genotype[parentA][i];
+			//交叉判定よりも小さいなら交叉
+			if (get_rand_real() < CROSS) {
+				writeCrossoveredGenotype(offspring, genotype[parentA], genotype[parentB]);
+			}
+			else {
+				//交叉しない場合はparentA
+				for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+					offspring[i] = genotype[parentA][i];
+				}
+			}
+
+			//突然変異
+			if (get_rand_real() < MUTATION) writeMutatedGenotype(offspring);
+
+
+			//Accepting :　新しい子孫を新しい個体群へ
+			for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+				genotype[newPOP][i] = offspring[i];
+			}
 		}
-
-		//突然変異
-		if (get_rand_real() < MUTATION) writeMutatedGenotype(offspring);
-
-
-		//Accepting :　新しい子孫を新しい個体群へ
-		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
-			newgenotype[0][i] = offspring[i];
-		}
+			
 		
 		//評価
 		writeGenotypeEval(genotype, evals);
@@ -219,10 +229,8 @@ int main() {
 		//優秀な奴
 		int highestPop = highestPopNum(evals);
 
-		cout << "evals" << evals[highestPop] << endl;
+		cout << "GEN"<<gen<<"*"<<"evals" << evals[highestPop] << endl;
 	}
-
-
 }
 
 //引数は，MAXIMUM_GENOTYPEこの要素をもった配列へのポインタ
@@ -261,10 +269,9 @@ int highestPopNum(double* evals) {
 	return highest;
 }
 
-
-double* roulette(double const evals[]) {
+//価値の配列をもらって，それぞれの価値を正規化した配列を返す
+void writeRouletteRatios(double const evals[],double *ratios) {
 	double sum = 0;
-	double ratios[POPULATION] = { 0 };
 
 	//全体の計算
 	for (int i = 0; i < POPULATION; i++) {
@@ -275,14 +282,14 @@ double* roulette(double const evals[]) {
 	for (int i = 0; i < POPULATION; i++) {
 		ratios[i] = evals[i] / sum;
 	}
-
-	return ratios;
 }
 int selectParent(double* const ratios) {
 	std::random_device rnd;
 
 	double rndProb = get_rand_real();
 	double selectProb = 0;
+
+	
 
 	int selecter = 0;
 
@@ -297,6 +304,7 @@ int selectParent(double* const ratios) {
 			selectProb += ratios[selecter];
 		}
 	}
+
 	return selecter;
 }
 

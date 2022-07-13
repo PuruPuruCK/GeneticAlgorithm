@@ -182,7 +182,7 @@ int main() {
 	}
 
 	//進化ループ
-	for (int gen = 0; gen < 2; gen++){
+	for (int gen = 0; gen < 1; gen++){
 		//ルーレットフェーズ
 		double ratios[POPULATION] = { 0 };
 
@@ -190,12 +190,12 @@ int main() {
 
 		//交配（POPULATION体分）
 		for (int newPOP = 0; newPOP < POPULATION; newPOP++) {
-			
+
 			//親の選択(2体)
 			//randomを使って親を2体選択
 			int parentA = selectParent(ratios);
 			int parentB = selectParent(ratios);
-
+			//test済み
 			//交叉
 
 			//子孫
@@ -221,6 +221,16 @@ int main() {
 				genotype[newPOP][i] = offspring[i];
 			}
 		}
+			//test
+			
+			for (int testx = 0; testx < POPULATION; testx++) {
+				cout << "GENERATEDGEN" << testx<<":";
+				for (int testy = 0; testy < MAXIMUM_GENOTYPE; testy++) {
+					cout << genotype[testx][testy];
+				}
+				cout << endl;
+			}
+		
 			
 		
 		//評価
@@ -234,12 +244,15 @@ int main() {
 }
 
 //引数は，MAXIMUM_GENOTYPEこの要素をもった配列へのポインタ
-void writeGenotypeEval(double (* genotype)[MAXIMUM_GENOTYPE], double* evals) {
+void writeGenotypeEval(double (*genotype)[MAXIMUM_GENOTYPE], double* evals) {
 	for (int y = 0; y < POPULATION; y++) {
 		int now_weight = 0;
 		int now_eval = 0;
 
-		for (int x = 0; x < POPULATION; x++) {
+		cout << "NEWGENOTYPE" << y << ":";
+
+		for (int x = 0; x < MAXIMUM_GENOTYPE; x++) {
+			cout << genotype[y][x];
 			if (genotype[y][x] == 1) {
 				//入ってるのでweightの更新
 				now_weight += weight[x];
@@ -249,6 +262,7 @@ void writeGenotypeEval(double (* genotype)[MAXIMUM_GENOTYPE], double* evals) {
 		}
 		//全体評価
 		evals[y] = now_eval;
+		cout << " eval" << evals[y] << endl;
 	}
 }
 
@@ -289,8 +303,6 @@ int selectParent(double* const ratios) {
 	double rndProb = get_rand_real();
 	double selectProb = 0;
 
-	
-
 	int selecter = 0;
 
 	for (selecter = 0; selecter < POPULATION; selecter++) {
@@ -305,7 +317,7 @@ int selectParent(double* const ratios) {
 		}
 	}
 
-	return selecter;
+	return min(selecter,49);
 }
 
 void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB) {

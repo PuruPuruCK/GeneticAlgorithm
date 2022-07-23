@@ -135,7 +135,6 @@ double get_rand_real() {
 	return get_rand_uni_real(mt64);
 }
 
-//d—ÊŒvZ‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å’¼‚µ‚Ä‚­‚ê
 
 int main() {
 

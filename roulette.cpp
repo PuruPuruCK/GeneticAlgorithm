@@ -172,7 +172,7 @@ int main() {
 
 
 			//表示
-			cout << genotype[y][x] << ",";
+			//cout << genotype[y][x] << ",";
 
 
 		}
@@ -180,18 +180,28 @@ int main() {
 		evals[y] = now_eval;
 
 		//表示
-		cout << "weight" << now_weight << "eval" << evals[y] << endl;
+		//cout << "weight" << now_weight << "eval" << evals[y] << endl;
 	}
 
 	//進化ループ
-	for (int gen = 0; gen < 1; gen++){
+	for (int gen = 0; gen < 30000; gen++){
+		
+		//引き継ぎフェーズ
+		int highestPop = highestPopNum(evals);
+		int higestPopGenotype[50] = { 0 };
+
+		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+			higestPopGenotype[i] = genotype[highestPop][i];
+		}
+		
+		
 		//ルーレットフェーズ
 		double ratios[POPULATION] = { 0 };
 
 		writeRouletteRatios(evals,ratios);
 
 		//交配（POPULATION体分）
-		for (int newPOP = 0; newPOP < POPULATION; newPOP++) {
+		for (int newPOP = 0; newPOP < POPULATION-1; newPOP++) {
 
 			//親の選択(2体)
 			//randomを使って親を2体選択
@@ -223,14 +233,17 @@ int main() {
 				genotype[newPOP][i] = offspring[i];
 			}
 		}	
-		
+
+		for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+			genotype[49][i] = higestPopGenotype[i];
+		}
+
 		//評価
 		writeGenotypeEval(genotype, evals);
 
-		//優秀な奴
-		int highestPop = highestPopNum(evals);
-
-		cout << "GEN"<<gen<<"*"<<"evals" << evals[highestPop] << endl;
+		highestPop = highestPopNum(evals);
+		cout << "GEN" << gen << "," << "eval" << evals[highestPop] << endl;
+	
 	}
 	return 0;
 }
@@ -245,10 +258,10 @@ void writeGenotypeEval(double (*genotype)[MAXIMUM_GENOTYPE], double* evals) {
 		now_weight = 0;
 		now_eval = 0;
 
-		cout << "NEWGENOTYPE" << y << ":";
+		//cout << "NEWGENOTYPE" << y << ":";
 
 		for (int x = 0; x < MAXIMUM_GENOTYPE; x++) {
-			cout << genotype[y][x];
+			//cout << genotype[y][x];
 			if (genotype[y][x] == 1) {
 				//入ってるのでweightの更新
 				now_weight += weight[x];
@@ -259,7 +272,7 @@ void writeGenotypeEval(double (*genotype)[MAXIMUM_GENOTYPE], double* evals) {
 		}
 		evals[y] = now_eval;
 		//全体評価
-		cout << " eval" << evals[y] << "," << "weight" << now_weight << endl;
+		//cout << " eval" << evals[y] << "," << "weight" << now_weight << endl;
 		
 	}
 }
@@ -319,14 +332,31 @@ int selectParent(double* const ratios) {
 }
 
 void writeCrossoveredGenotype(double* offspring, double* const parentA, double* const parentB) {
-	//一転交叉
+	//一点交叉
 	std::random_device rnd;
+
+	int nowWeight = 0;
 
 	int crossover_point = (int)std::floor(get_rand_real() * MAXIMUM_GENOTYPE);
 
+
+
 	//交叉
 	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+		
 		offspring[i] = (crossover_point > i) ? parentA[i] : parentB[i];
+
+			//重量制限計算
+			if (offspring[i] == 1) {
+				nowWeight += weight[i];
+
+				if (nowWeight > 60) {
+
+					//持ったものを外す
+					offspring[i] = 0;
+				}
+			}
+		
 	}
 }
 
@@ -338,12 +368,31 @@ void writeMutatedGenotype(double* offspring) {
 	//3個ぐらい入れ替える
 	const int MUTATION_NUM = 3;
 
+	int nowWeight = 0;
+	
+
+	//重量計算
+	for (int i = 0; i < MAXIMUM_GENOTYPE; i++) {
+		if(offspring[i]==1) nowWeight += weight[i];
+	}
+
 	for (int i = 0; i < MUTATION_NUM; i++) {
 
 		int point = (int)floor(get_rand_real() * MAXIMUM_GENOTYPE);
 
+		while (true) {
+			if ((nowWeight + -((offspring[point] - 0.5) * 2.) * weight[point]) > MAXIMUM_WEIGHT) {
+				
+				point = (point + 1) % 50;
+			}
+			else break;
+		}
+
 		//反転
 		offspring[point] = 1 - offspring[point];
+		nowWeight = nowWeight + ((offspring[point] - 0.5) * 2.) * weight[point];
+		
+
 	}
 }
 
